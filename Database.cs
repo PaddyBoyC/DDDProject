@@ -44,12 +44,11 @@ namespace DDDProject
 
         void CreateTables(SQLiteConnection conn)
         {
-            string[] cmdStrings = { "CREATE TABLE Student (ID TEXT PRIMARY KEY, Name TEXT, Email TEXT)",
+            string[] cmdStrings = { "CREATE TABLE Student (ID TEXT PRIMARY KEY, Name TEXT, Email TEXT, SupervisorID TEXT, FOREIGN KEY(SupervisorID) REFERENCES Staff(ID))",
                                     "CREATE TABLE Staff (ID TEXT PRIMARY KEY, Name TEXT, Email TEXT)",
-                                    "CREATE TABLE Course (ID TEXT PRIMARY KEY, Name TEXT)",
+                                    "CREATE TABLE Course (ID TEXT PRIMARY KEY, Name TEXT, SeniorTutorID TEXT)",
                                     "CREATE TABLE StudentCourse (StudentID TEXT, CourseID TEXT, PRIMARY KEY (StudentID, CourseID), FOREIGN KEY(StudentID) REFERENCES Student(ID), FOREIGN KEY(CourseID) REFERENCES Course(ID))",
                                     "CREATE TABLE StaffCourse (StaffID TEXT, CourseID TEXT, Role TEXT, PRIMARY KEY (StaffID, CourseID), FOREIGN KEY(StaffID) REFERENCES Staff(ID), FOREIGN KEY(CourseID) REFERENCES Course(ID))",
-                                    "CREATE TABLE SupervisorStudent (StaffID TEXT, StudentID TEXT, PRIMARY KEY (StaffID, StudentID), FOREIGN KEY(StudentID) REFERENCES Student(ID), FOREIGN KEY(StaffID) REFERENCES Staff(ID))",
                                     "CREATE TABLE Meeting (ID INTEGER PRIMARY KEY AUTOINCREMENT, StudentID TEXT, StaffID TEXT, DateTime TEXT, FOREIGN KEY(StudentID) REFERENCES Student(ID), FOREIGN KEY(StaffID) REFERENCES Staff(ID))",
                                     "CREATE TABLE StudentEvaluation (ID INTEGER PRIMARY KEY AUTOINCREMENT, StudentID TEXT, DateTime TEXT, EvaluationRating INTEGER, ExtraNotes TEXT, FOREIGN KEY(StudentID) REFERENCES Student(ID))", };
 
@@ -61,19 +60,20 @@ namespace DDDProject
             }
         }
 
-        public void AddStudent(string id, string name, string email)
+        public void AddStudent(string id, string name, string email, string supervisorID)
         {
             SQLiteConnection conn = CreateConnection();
             try
             {
                 SQLiteCommand cmd = conn.CreateCommand();
-                cmd.CommandText = @"INSERT INTO Student (ID, Name, Email) 
-                                VALUES ($id, $name, $email)";
+                cmd.CommandText = @"INSERT INTO Student (ID, Name, Email, SupervisorID) 
+                                VALUES ($id, $name, $email, $supervisorid)";
 
                 // Bind the parameters to the query.
                 cmd.Parameters.AddWithValue("$id", id);
                 cmd.Parameters.AddWithValue("$name", name);
                 cmd.Parameters.AddWithValue("$email", email);
+                cmd.Parameters.AddWithValue("$supervisorid", supervisorID);
 
                 // Execute SQL.
                 cmd.ExecuteNonQuery();
@@ -89,18 +89,19 @@ namespace DDDProject
             }
         }
 
-        public void AddCourse(string id, string name)
+        public void AddCourse(string id, string name, string seniorTutorID)
         {
             SQLiteConnection conn = CreateConnection();
             try
             {
                 SQLiteCommand cmd = conn.CreateCommand();
-                cmd.CommandText = @"INSERT INTO Course (ID, Name) 
-                                VALUES ($id, $name)";
+                cmd.CommandText = @"INSERT INTO Course (ID, Name, SeniorTutorID) 
+                                VALUES ($id, $name, $seniortutorid)";
 
                 // Bind the parameters to the query.
                 cmd.Parameters.AddWithValue("$id", id);
                 cmd.Parameters.AddWithValue("$name", name);
+                cmd.Parameters.AddWithValue("$seniortutorid", seniorTutorID);
 
                 // Execute SQL.
                 cmd.ExecuteNonQuery();
@@ -238,33 +239,6 @@ namespace DDDProject
                 // Bind the parameters to the query.
                 cmd.Parameters.AddWithValue("$staffid", staffID);
                 cmd.Parameters.AddWithValue("$courseid", courseID);
-
-                // Execute SQL.
-                cmd.ExecuteNonQuery();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("An error occurred:");
-                Console.WriteLine(e.Message);
-            }
-            finally
-            {
-                conn.Close();
-            }
-        }
-
-        public void AssignSupervisorToStudent(string staffID, string studentID)
-        {
-            SQLiteConnection conn = CreateConnection();
-            try
-            {
-                SQLiteCommand cmd = conn.CreateCommand();
-                cmd.CommandText = @"INSERT INTO SupervisorStudent (StaffID, StudentID) 
-                                VALUES ($staffid, $studentid)";
-
-                // Bind the parameters to the query.
-                cmd.Parameters.AddWithValue("$staffid", staffID);
-                cmd.Parameters.AddWithValue("$studentid", studentID);
 
                 // Execute SQL.
                 cmd.ExecuteNonQuery();

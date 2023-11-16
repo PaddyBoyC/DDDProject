@@ -15,13 +15,12 @@ namespace DDDProject
         public void Run()
         {
             _db = new Database("database.db");
-            _db.AddStudent("abcd1", "peter", "peter@hull.ac.uk");
             _db.AddStaff("12345", "David", "david@hull.ac.uk");
-            _db.AddCourse("geo", "Geography");
+            _db.AddStudent("abcd1", "peter", "peter@hull.ac.uk", "12345");
+            _db.AddCourse("geo", "Geography", "12345");
             _db.BookMeeting("abcd1", "12345", CurrentDateStr());
             _db.AddStudentToCourse("abcd1", "geo");
             _db.AddStaffToCourse("12345", "geo");
-            _db.AssignSupervisorToStudent("12345", "abcd1");
             _db.AddEvaluation("abcd1", CurrentDateStr(), 5, "was fine.");
 
             static string CurrentDateStr()
