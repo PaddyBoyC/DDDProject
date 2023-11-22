@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Data.Entity;
 using System.Data.SQLite;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace DDDProject
@@ -49,7 +51,7 @@ namespace DDDProject
                                     "CREATE TABLE Course (ID TEXT PRIMARY KEY, Name TEXT, SeniorTutorID TEXT)",
                                     "CREATE TABLE StudentCourse (StudentID TEXT, CourseID TEXT, PRIMARY KEY (StudentID, CourseID), FOREIGN KEY(StudentID) REFERENCES Student(ID), FOREIGN KEY(CourseID) REFERENCES Course(ID))",
                                     "CREATE TABLE StaffCourse (StaffID TEXT, CourseID TEXT, Role TEXT, PRIMARY KEY (StaffID, CourseID), FOREIGN KEY(StaffID) REFERENCES Staff(ID), FOREIGN KEY(CourseID) REFERENCES Course(ID))",
-                                    "CREATE TABLE Meeting (ID INTEGER PRIMARY KEY AUTOINCREMENT, StudentID TEXT, StaffID TEXT, DateTime TEXT, FOREIGN KEY(StudentID) REFERENCES Student(ID), FOREIGN KEY(StaffID) REFERENCES Staff(ID))",
+                                    "CREATE TABLE Meeting (ID INTEGER PRIMARY KEY AUTOINCREMENT, StudentID TEXT, StaffID TEXT, DateTime TEXT, BookedByStudent INTEGER, FOREIGN KEY(StudentID) REFERENCES Student(ID), FOREIGN KEY(StaffID) REFERENCES Staff(ID))",
                                     "CREATE TABLE StudentEvaluation (ID INTEGER PRIMARY KEY AUTOINCREMENT, StudentID TEXT, DateTime TEXT, EvaluationRating INTEGER, ExtraNotes TEXT, FOREIGN KEY(StudentID) REFERENCES Student(ID))", };
 
             foreach (string cmdString in cmdStrings)
@@ -60,20 +62,19 @@ namespace DDDProject
             }
         }
 
-        public void AddStudent(string id, string name, string email, string supervisorID)
+        public void ExecuteNonQueryCommand(string sql, Dictionary<string, object> parameters)
         {
             SQLiteConnection conn = CreateConnection();
             try
             {
                 SQLiteCommand cmd = conn.CreateCommand();
-                cmd.CommandText = @"INSERT INTO Student (ID, Name, Email, SupervisorID) 
-                                VALUES ($id, $name, $email, $supervisorid)";
+                cmd.CommandText = sql;
 
                 // Bind the parameters to the query.
-                cmd.Parameters.AddWithValue("$id", id);
-                cmd.Parameters.AddWithValue("$name", name);
-                cmd.Parameters.AddWithValue("$email", email);
-                cmd.Parameters.AddWithValue("$supervisorid", supervisorID);
+                foreach (var parameter in parameters)
+                {
+                    cmd.Parameters.AddWithValue(parameter.Key, parameter.Value);
+                }
 
                 // Execute SQL.
                 cmd.ExecuteNonQuery();
@@ -87,6 +88,48 @@ namespace DDDProject
             {
                 conn.Close();
             }
+        }
+
+        public List<NameValueCollection> ExecuteQueryCommand(string sql, Dictionary<string, object> parameters)
+        {
+            SQLiteConnection conn = CreateConnection();
+            try
+            {
+                SQLiteCommand cmd = conn.CreateCommand();
+                cmd.CommandText = sql;
+
+                // Bind the parameters to the query.
+                foreach (var parameter in parameters)
+                {
+                    cmd.Parameters.AddWithValue(parameter.Key, parameter.Value);
+                }
+
+                // Execute SQL.
+                SQLiteDataReader reader = cmd.ExecuteReader();
+                List<NameValueCollection> results = new();
+                while (reader.Read())
+                {
+                    results.Add(reader.GetValues());
+                }
+                return results;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("An error occurred:");
+                Console.WriteLine(e.Message);
+            }
+            finally
+            {
+                conn.Close();
+            }
+            return null;
+        }
+
+        public void AddStudent(string id, string name, string email, string supervisorID)
+        {
+            ExecuteNonQueryCommand(@"INSERT INTO Student (ID, Name, Email, SupervisorID) 
+                                    VALUES ($id, $name, $email, $supervisorid)", 
+                                    new() { { "$id", id }, {"$name", name }, {"$email", email}, {"$supervisorid", supervisorID} });
         }
 
         public void AddCourse(string id, string name, string seniorTutorID)
@@ -144,19 +187,21 @@ namespace DDDProject
                 conn.Close();
             }
         }
-        public void BookMeeting(string studentID, string staffID, string dateTime)
+
+        public void BookMeeting(string studentID, string staffID, string dateTime, bool bookedByStudent)
         {
             SQLiteConnection conn = CreateConnection();
             try
             {
                 SQLiteCommand cmd = conn.CreateCommand();
-                cmd.CommandText = @"INSERT INTO Meeting (StudentID, StaffID, DateTime) 
-                                VALUES ($studentid, $staffid, $datetime)";
+                cmd.CommandText = @"INSERT INTO Meeting (StudentID, StaffID, DateTime, BookedByStudent) 
+                                VALUES ($studentid, $staffid, $datetime, $bookedbystudent)";
 
                 // Bind the parameters to the query.
                 cmd.Parameters.AddWithValue("$studentid", studentID);
                 cmd.Parameters.AddWithValue("$staffid", staffID);
                 cmd.Parameters.AddWithValue("$datetime", dateTime);
+                cmd.Parameters.AddWithValue("$bookedbystudent", bookedByStudent);
 
                 // Execute SQL.
                 cmd.ExecuteNonQuery();
@@ -252,6 +297,13 @@ namespace DDDProject
             {
                 conn.Close();
             }
+        }
+
+        public bool CheckStaffID(string staffID)
+        {
+            var results = ExecuteQueryCommand("SELECT ID FROM Staff WHERE ID = $staffid",
+                                new() { { "$staffid", staffID } });
+            return results != null && results.Count > 0;
         }
     }
 }
