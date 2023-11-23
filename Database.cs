@@ -305,5 +305,34 @@ namespace DDDProject
                                 new() { { "$staffid", staffID } });
             return results != null && results.Count > 0;
         }
+
+        public bool CheckStudentID(string studentID)
+        {
+            var results = ExecuteQueryCommand("SELECT ID FROM Student WHERE ID = $studentid",
+                                new() { { "$studentid", studentID } });
+            return results != null && results.Count > 0;
+        }
+
+        public bool CheckStudentOnCourse(string studentID, string courseID)
+        {
+            var results = ExecuteQueryCommand("SELECT * FROM StudentCourse WHERE StudentID = $studentid AND CourseID = $courseid",
+                               new() { { "$studentid", studentID }, { "$courseid", courseID } });
+            return results != null && results.Count > 0;
+        }
+
+        public bool CheckStaffOnCourse(string staffID, string courseID)
+        {
+            var results = ExecuteQueryCommand("SELECT * FROM StaffCourse WHERE StaffID = $staffid AND CourseID = $courseid",
+                               new() { { "$staffid", staffID }, { "$courseid", courseID } });
+            return results != null && results.Count > 0;
+        }
+
+        public void AddStudentEvaluation(string studentID, string dateTime, int evaluation, string notes)
+        {
+            ExecuteNonQueryCommand(@"INSERT INTO StudentEvaluation (StudentID, DateTime, EvaluationRating, ExtraNotes) 
+                                    VALUES ($studentid, $datetime, $rating, $notes)",
+                                    new() { { "$studentid", studentID }, { "$rating", evaluation }, { "$notes", notes }, { "$datetime", dateTime } });
+        }
     }
+
 }
