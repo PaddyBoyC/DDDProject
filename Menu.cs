@@ -20,7 +20,7 @@ namespace DDDProject
         Database db;
 
         string signedInID;
-        Role role;
+        Role signedInRole;
 
         static string CurrentDateStr()
         {
@@ -48,9 +48,13 @@ namespace DDDProject
                 {
                     input = SignInMenu();
                 }
+                else if (signedInRole == Role.PersonalSupervisor)
+                {
+                    input = PersonalSupervisorMenu();
+                }
                 else
                 {
-                    input = MainMenu();
+                    input = StudentMenu();
                 }
             }
             while (input != "q");
@@ -87,10 +91,11 @@ namespace DDDProject
             return input;
         }
 
-        private string MainMenu()
+        private string StudentMenu()
         {
             string input;
             Console.WriteLine("1: Add self-evaluation");
+            Console.WriteLine("2: Book meeting");
             Console.WriteLine("q: Quit");
             input = Console.ReadLine();
             switch (input)
@@ -98,6 +103,35 @@ namespace DDDProject
                 case "1":
                     {
                         AddSelfEvaluation();
+                        break;
+                    }
+                case "2":
+                    {
+                        BookMeeting();
+                        break;
+                    }
+            }
+
+            return input;
+        }
+
+        private string PersonalSupervisorMenu()
+        {
+            string input;
+            Console.WriteLine("1: View students status");
+            Console.WriteLine("2: Book meeting");
+            Console.WriteLine("q: Quit");
+            input = Console.ReadLine();
+            switch (input)
+            {
+                case "1":
+                    {
+                        ViewStudentStatus();
+                        break;
+                    }
+                case "2":
+                    {
+                        BookMeeting();
                         break;
                     }
             }
@@ -139,7 +173,7 @@ namespace DDDProject
             {
                 Console.WriteLine("Signed in successfully");
                 signedInID = id;
-                role = _role;
+                signedInRole = _role;
             }
             else
             {
@@ -162,6 +196,72 @@ namespace DDDProject
             string notes = Console.ReadLine();
 
             db.AddStudentEvaluation(signedInID,CurrentDateStr(), evaluation, notes);
+        }
+
+        void BookMeeting()
+        {
+            string staffID, studentID;
+            if (signedInRole == Role.Student)
+            {
+                studentID = signedInID;
+                // find out the ID of the staff member the student wants to book with
+                Console.WriteLine("Enter the ID of the staff member you want to book a meeting with");
+                string input = Console.ReadLine();
+                var staffDetails = db.GetStaffDetails(input);
+                if (staffDetails == null)
+                {
+                    Console.WriteLine("Invalid staff ID");
+                    return;
+                }
+                staffID = input;
+            }
+            else
+            {
+                staffID = signedInID;
+                Console.WriteLine("Enter the ID of the student member you want to book a meeting with");
+                string input = Console.ReadLine();
+                var studentDetails = db.GetStudentDetails(input);
+                if (studentDetails == null)
+                {
+                    Console.WriteLine("Invalid student ID");
+                    return;
+                }
+                studentID = input;
+            }
+
+            Console.WriteLine("Enter the desired date and time for the meeting (e.g. 28/02/2024 13:00): ");
+            DateTime? dateTime = InputDateTime();
+            if (dateTime.HasValue)
+            {
+                db.BookMeeting(studentID, staffID, dateTime.Value.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture), signedInRole == Role.Student);
+            }
+            else
+            {
+                Console.WriteLine("Invalid date/time");
+            }
+        }
+
+        static DateTime? InputDateTime()
+        {
+            Console.WriteLine("Enter a date: ");
+            DateTime userDateTime;
+            if (DateTime.TryParse(Console.ReadLine(), out userDateTime))
+            {
+                return userDateTime;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        void ViewStudentStatus()
+        {
+            var results = db.GetStudentStatus(signedInID);
+            foreach (var result in results)
+            {
+                Console.WriteLine($"{result["Name"]} {result["Email"]} {result["EvaluationRating"]} {result["ExtraNotes"]} {result["DateTime"]}");
+            }
         }
     }
 }

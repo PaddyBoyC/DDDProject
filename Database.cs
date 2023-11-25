@@ -333,6 +333,46 @@ namespace DDDProject
                                     VALUES ($studentid, $datetime, $rating, $notes)",
                                     new() { { "$studentid", studentID }, { "$rating", evaluation }, { "$notes", notes }, { "$datetime", dateTime } });
         }
+
+        public NameValueCollection? GetStaffDetails(string id)
+        {
+            var results = ExecuteQueryCommand("SELECT * FROM Staff WHERE ID = $id",
+                              new() { { "$id", id } } ) ;
+            if (results == null || results.Count == 0)
+            {
+                return null;
+            }
+            else
+            {
+                return results.FirstOrDefault();
+            }
+        }
+
+        public NameValueCollection? GetStudentDetails(string id)
+        {
+            var results = ExecuteQueryCommand("SELECT * FROM Student WHERE ID = $id",
+                              new() { { "$id", id } });
+            if (results == null || results.Count == 0)
+            {
+                return null;
+            }
+            else
+            {
+                return results.FirstOrDefault();
+            }
+        }
+
+        public List<NameValueCollection> GetSupervisorStudents(string supervisorID)
+        {
+            return ExecuteQueryCommand("SELECT * FROM Student WHERE SupervisorID = $supervisorid",
+                                        new() { { "$supervisorid", supervisorID } });
+        }
+
+        public List<NameValueCollection> GetStudentStatus(string supervisorID)
+        {
+            return ExecuteQueryCommand("SELECT * FROM Student, StudentEvaluation WHERE Student.SupervisorID = $supervisorid AND StudentEvaluation.StudentID = Student.ID",
+                                        new() { { "$supervisorid", supervisorID } });
+        }
     }
 
 }
