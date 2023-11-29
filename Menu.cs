@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Data.SQLite;
 using System.Globalization;
+using System.Collections.Specialized;
 
 namespace DDDProject
 {
@@ -52,9 +53,13 @@ namespace DDDProject
                 {
                     input = PersonalSupervisorMenu();
                 }
-                else
+                else if (signedInRole == Role.Student)
                 {
                     input = StudentMenu();
+                }
+                else
+                {
+                    input = SeniorTutorMenu();
                 }
             }
             while (input != "q");
@@ -132,6 +137,30 @@ namespace DDDProject
                 case "2":
                     {
                         BookMeeting();
+                        break;
+                    }
+            }
+
+            return input;
+        }
+
+        private string SeniorTutorMenu()
+        {
+            string input;
+            Console.WriteLine("1: View students status");
+            Console.WriteLine("2: View Students/Personal Supervisor meetings");
+            Console.WriteLine("q: Quit");
+            input = Console.ReadLine();
+            switch (input)
+            {
+                case "1":
+                    {
+                        ViewStudentStatus();
+                        break;
+                    }
+                case "2":
+                    {
+                        ShowAllMeetings();
                         break;
                     }
             }
@@ -257,10 +286,27 @@ namespace DDDProject
 
         void ViewStudentStatus()
         {
-            var results = db.GetStudentStatus(signedInID);
+            List<NameValueCollection> results;
+            if (signedInRole == Role.PersonalSupervisor)
+            {
+                results = db.GetStudentStatus(signedInID);
+            }
+            else
+            {
+                results = db.GetAllStudentStatus();
+            }
             foreach (var result in results)
             {
                 Console.WriteLine($"{result["Name"]} {result["Email"]} {result["EvaluationRating"]} {result["ExtraNotes"]} {result["DateTime"]}");
+            }
+        }
+
+        void ShowAllMeetings()
+        {
+            var results = db.GetAllMeetings();
+            foreach (var result in results)
+            {
+                Console.WriteLine($"{result["StudentName"]} {result["StaffName"]} {result["DateTime"]}");
             }
         }
     }

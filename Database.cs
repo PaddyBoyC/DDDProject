@@ -128,8 +128,8 @@ namespace DDDProject
         public void AddStudent(string id, string name, string email, string supervisorID)
         {
             ExecuteNonQueryCommand(@"INSERT INTO Student (ID, Name, Email, SupervisorID) 
-                                    VALUES ($id, $name, $email, $supervisorid)", 
-                                    new() { { "$id", id }, {"$name", name }, {"$email", email}, {"$supervisorid", supervisorID} });
+                                    VALUES ($id, $name, $email, $supervisorid)",
+                                    new() { { "$id", id }, { "$name", name }, { "$email", email }, { "$supervisorid", supervisorID } });
         }
 
         public void AddCourse(string id, string name, string seniorTutorID)
@@ -337,7 +337,7 @@ namespace DDDProject
         public NameValueCollection? GetStaffDetails(string id)
         {
             var results = ExecuteQueryCommand("SELECT * FROM Staff WHERE ID = $id",
-                              new() { { "$id", id } } ) ;
+                              new() { { "$id", id } });
             if (results == null || results.Count == 0)
             {
                 return null;
@@ -372,6 +372,18 @@ namespace DDDProject
         {
             return ExecuteQueryCommand("SELECT * FROM Student, StudentEvaluation WHERE Student.SupervisorID = $supervisorid AND StudentEvaluation.StudentID = Student.ID",
                                         new() { { "$supervisorid", supervisorID } });
+        }
+
+        public List<NameValueCollection> GetAllStudentStatus()
+        {
+            return ExecuteQueryCommand("SELECT * FROM Student, StudentEvaluation WHERE StudentEvaluation.StudentID = Student.ID",
+                                        new() { });
+        }
+
+        public List<NameValueCollection> GetAllMeetings()
+        {
+            return ExecuteQueryCommand("SELECT Student.Name AS StudentName, Staff.Name AS StaffName, DateTime FROM Meeting, Student, Staff WHERE Meeting.StudentID = Student.ID AND Meeting.StaffID = Staff.ID",
+                                        new() { });
         }
     }
 
