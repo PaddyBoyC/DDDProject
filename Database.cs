@@ -11,7 +11,7 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace DDDProject
 {
-    internal class Database
+    public class Database
     {
         string _fileName;
 

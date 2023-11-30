@@ -31,12 +31,14 @@ namespace DDDProject
         public void Run()
         {
             db = new Database("database.db");
-            db.AddStaff("12345", "David", "david@hull.ac.uk");
-            db.AddStudent("abcd1", "peter", "peter@hull.ac.uk", "12345");
+            db.AddStaff("12345", "Simon Gardner", "david-gardner@hull.ac.uk");
+            db.AddStaff("67890", "Edna Hayes", "edna-hayes@hull.ac.uk");
+            db.AddStudent("abcd1", "Brain Beck", "brian-beck@hull.ac.uk", "12345");
             db.AddCourse("geo", "Geography", "12345");
             db.BookMeeting("abcd1", "12345", CurrentDateStr(), true);
             db.AddStudentToCourse("abcd1", "geo");
             db.AddStaffToCourse("12345", "geo");
+            db.AddStaffToCourse("67890", "geo");
             db.AddEvaluation("abcd1", CurrentDateStr(), 5, "was fine.");
             //_db.AddStudent("student2", "jack", "jack@hull.ac.uk", "24945433");
 
