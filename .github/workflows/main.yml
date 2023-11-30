@@ -1,0 +1,32 @@
+name: Calculator Unit Tests
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Setup .Net envrionment
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '6.0.x'
+
+    - name: Install Test Platform
+      working-directory: /UnitTests
+      run: dotnet add package Microsoft.TestPlatform --version 17.5.0
+
+    - name: Dependency Restore
+      run: dotnet build
+
+    - name: Project Build
+      run: dotnet build
+
+    - name: Project Test
+      run: dotnet test
